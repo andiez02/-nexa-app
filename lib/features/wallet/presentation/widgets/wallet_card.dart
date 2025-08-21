@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../providers/app_provider.dart';
+
+import '../../../../app/constants.dart';
+import '../../wallet_provider.dart';
 
 class WalletCard extends StatelessWidget {
   const WalletCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppProvider>(
-      builder: (context, appProvider, child) {
+    return Consumer<WalletProvider>(
+      builder: (context, walletProvider, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -29,7 +29,7 @@ class WalletCard extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              if (appProvider.isWalletConnected) ...[
+              if (walletProvider.isWalletConnected) ...[
                 // Wallet connected view
                 Container(
                   width: double.infinity,
@@ -94,7 +94,7 @@ class WalletCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _formatAddress(appProvider.walletAddress),
+                            _formatAddress(walletProvider.walletAddress),
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -102,7 +102,7 @@ class WalletCard extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => _copyAddress(context, appProvider.walletAddress),
+                            onTap: () => _copyAddress(context, walletProvider.walletAddress),
                             child: Icon(
                               Icons.copy_rounded,
                               color: AppColors.white.withOpacity(0.7),
@@ -227,7 +227,7 @@ class WalletCard extends StatelessWidget {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: appProvider.isLoading 
+                          onPressed: walletProvider.isLoading 
                               ? null 
                               : () => _connectWallet(context),
                           style: ElevatedButton.styleFrom(
@@ -237,7 +237,7 @@ class WalletCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: appProvider.isLoading
+                          child: walletProvider.isLoading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
@@ -378,10 +378,10 @@ class WalletCard extends StatelessWidget {
   }
 
   void _connectWallet(BuildContext context) async {
-    final appProvider = context.read<AppProvider>();
+    final walletProvider = context.read<WalletProvider>();
     
     try {
-      final success = await appProvider.connectWallet();
+      final success = await walletProvider.connectWallet();
       
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -424,7 +424,7 @@ class WalletCard extends StatelessWidget {
   }
 
   void _disconnectWallet(BuildContext context) async {
-    final appProvider = context.read<AppProvider>();
+    final walletProvider = context.read<WalletProvider>();
     
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -475,7 +475,7 @@ class WalletCard extends StatelessWidget {
     ) ?? false;
 
     if (confirmed) {
-      await appProvider.disconnectWallet();
+      await walletProvider.disconnectWallet();
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

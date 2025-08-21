@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../providers/app_provider.dart';
-import '../../routes/app_routes.dart';
+
+import '../../../../app/constants.dart';
+import '../../../../app/routes.dart';
+import '../../../wallet/wallet_provider.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -19,45 +19,15 @@ class GetStartedScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              // Skip button
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: () => _skipToHome(context),
-                  child: Text(
-                    AppStrings.skip,
-                    style: GoogleFonts.inter(
-                      color: AppColors.gray600,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
+              // Image
+              Image.asset('assets/images/get_started_image.png', width: 400, height: 400),
               
-              const Spacer(flex: 1),
-              
-              // MetaMask logo placeholder
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Icon(
-                  Icons.account_balance_wallet_rounded,
-                  size: 60,
-                  color: AppColors.primary,
-                ),
-              ),
-              
-              const SizedBox(height: 48),
+              const SizedBox(height: 24),
               
               // Title
               Text(
                 AppStrings.getStartedTitle,
-                textAlign: TextAlign.center,
+                // textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
@@ -71,7 +41,7 @@ class GetStartedScreen extends StatelessWidget {
               // Subtitle
               Text(
                 AppStrings.getStartedSubtitle,
-                textAlign: TextAlign.center,
+                // textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
@@ -83,24 +53,25 @@ class GetStartedScreen extends StatelessWidget {
               const Spacer(flex: 2),
               
               // Connect MetaMask button
-              Consumer<AppProvider>(
-                builder: (context, appProvider, child) {
+              Consumer<WalletProvider>(
+                builder: (context, walletProvider, child) {
                   return SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: ElevatedButton(
-                      onPressed: appProvider.isLoading 
+                    child: OutlinedButton(
+                      onPressed: walletProvider.isLoading 
                           ? null 
                           : () => _connectMetaMask(context),
-                      style: ElevatedButton.styleFrom(
+                      style: OutlinedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         disabledBackgroundColor: AppColors.gray300,
+                        side: BorderSide(color: AppColors.primary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
                       ),
-                      child: appProvider.isLoading
+                      child: walletProvider.isLoading
                           ? const SizedBox(
                               width: 24,
                               height: 24,
@@ -112,11 +83,7 @@ class GetStartedScreen extends StatelessWidget {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  color: AppColors.white,
-                                  size: 24,
-                                ),
+                                Image.asset('assets/images/metamask-icon.png'),
                                 const SizedBox(width: 12),
                                 Text(
                                   AppStrings.connectMetaMask,
@@ -132,35 +99,7 @@ class GetStartedScreen extends StatelessWidget {
                   );
                 },
               ),
-              
               const SizedBox(height: 16),
-              
-              // Skip button (text)
-              TextButton(
-                onPressed: () => _skipToHome(context),
-                child: Text(
-                  AppStrings.skip,
-                  style: GoogleFonts.inter(
-                    color: AppColors.gray600,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Info text
-              Text(
-                "MetaMask là ví tiền điện tử phổ biến nhất để tương tác với ứng dụng Web3",
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.gray500,
-                  height: 1.4,
-                ),
-              ),
             ],
           ),
         ),
@@ -169,10 +108,10 @@ class GetStartedScreen extends StatelessWidget {
   }
 
   void _connectMetaMask(BuildContext context) async {
-    final appProvider = context.read<AppProvider>();
+    final walletProvider = context.read<WalletProvider>();
     
     try {
-      final success = await appProvider.connectWallet();
+      final success = await walletProvider.connectWallet();
       
       if (success) {
         // Show success message
@@ -243,9 +182,5 @@ class GetStartedScreen extends StatelessWidget {
         );
       }
     }
-  }
-
-  void _skipToHome(BuildContext context) {
-    context.go(AppRoutes.home);
   }
 }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../providers/app_provider.dart';
-import '../../widgets/wallet_card.dart';
+import '../../../../app/constants.dart';
+import '../../wallet_provider.dart';
+import '../widgets/wallet_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeTab() {
-    return Consumer<AppProvider>(
-      builder: (context, appProvider, child) {
+    return Consumer<WalletProvider>(
+      builder: (context, walletProvider, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -86,8 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        appProvider.isWalletConnected
-                            ? _formatAddress(appProvider.walletAddress)
+                        walletProvider.isWalletConnected
+                            ? _formatAddress(walletProvider.walletAddress)
                             : 'Chưa kết nối ví',
                         style: GoogleFonts.inter(
                           fontSize: 14,
@@ -140,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      appProvider.isWalletConnected ? '\$12,345.67' : '\$0.00',
+                      walletProvider.isWalletConnected ? '\$12,345.67' : '\$0.00',
                       style: GoogleFonts.inter(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
@@ -236,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               
               // Transaction list
-              if (appProvider.isWalletConnected) ...[
+              if (walletProvider.isWalletConnected) ...[
                 _buildTransactionItem(
                   icon: Icons.send_rounded,
                   title: 'Gửi ETH',

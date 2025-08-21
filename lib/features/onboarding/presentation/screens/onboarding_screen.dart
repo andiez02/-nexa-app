@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../providers/app_provider.dart';
-import '../../routes/app_routes.dart';
+import '../../../../app/constants.dart';
+import '../../../../app/routes.dart';
+import '../../../app/app_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -137,7 +136,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 280,
             height: 280,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: data.imagePath != null
@@ -193,7 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: _currentPage == index ? 24 : 8,
+      width: _currentPage == index ? 36 : 8,
       height: 8,
       decoration: BoxDecoration(
         color: _currentPage == index ? AppColors.primary : AppColors.gray300,
