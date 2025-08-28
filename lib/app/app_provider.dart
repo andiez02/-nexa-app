@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../../app/constants.dart';
-import '../../core/services/storage_service.dart';
+import 'constants.dart';
+import '../core/services/storage_service.dart';
 
 /// App provider handles onboarding and app-level state
 class AppProvider extends ChangeNotifier {

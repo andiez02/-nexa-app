@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../app/constants.dart';
 import '../../../../app/routes.dart';
-import '../../../app/app_provider.dart';
+import '../../../../app/app_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

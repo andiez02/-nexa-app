@@ -45,5 +45,24 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.example.nexaApp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nexanft</string>
+				<string>wc</string>
+				<string>metamask</string>
+				<string>rainbow</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+	<string>metamask</string>
+	<!-- Add other wallet schemes names here -->
+	</array>
 </dict>
 </plist>

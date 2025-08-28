@@ -1,118 +1,137 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:reown_appkit/reown_appkit.dart';
 
-import '../../app/constants.dart';
-import '../../core/services/storage_service.dart';
-
-/// Wallet provider handles wallet connection and management
 class WalletProvider extends ChangeNotifier {
-  final IStorageService _storageService;
-  
-  bool _isWalletConnected = false;
-  String _walletAddress = '';
-  bool _isLoading = false;
+  late final ReownAppKitModal _appKitModal;
+  SessionData? _session;
+  bool _isInitialized = false;
 
-  WalletProvider(this._storageService);
+  SessionData? get session => _session;
+  bool get isConnected => _session != null;
 
-  // Getters
-  bool get isWalletConnected => _isWalletConnected;
-  String get walletAddress => _walletAddress;
-  bool get isLoading => _isLoading;
+  static const String projectId = 'be2f3ed58f943aa53db990ddff2a31b5';
 
-  /// Initialize wallet state from storage
-  Future<void> initialize() async {
-    _setLoading(true);
-    try {
-      _isWalletConnected = await _storageService.getBool(AppConstants.walletConnectedKey);
-      _walletAddress = await _storageService.getString(AppConstants.walletAddressKey) ?? '';
-      
+  Future<void> initAppKit(BuildContext context) async {
+    if (_isInitialized) {
+      debugPrint("⚠️ AppKit already initialized");
+      return;
+    }
+
+    debugPrint("🚀 Initializing AppKit...");
+
+    final appKit = await ReownAppKit.createInstance(
+      logLevel: LogLevel.debug,
+      projectId: projectId,
+      metadata: const PairingMetadata(
+        name: 'Nexa App',
+        description: 'Nexa App for NFT',
+        url: 'https://github.com/andiez02/-nexa-app',
+        icons: [
+          'https://github.com/andiez02/-nexa-app/blob/main/assets/images/icon.jpg',
+        ],
+        redirect: Redirect(
+          native: 'nexanft://home',
+          universal: 'https://github.com/andiez02/-nexa-app/home',
+          linkMode: false,
+        ),
+      ),
+    );
+
+    debugPrint("✅ AppKit instance created");
+
+    if (!context.mounted) {
+      debugPrint("⛔ Context is not mounted, stopping init");
+      return;
+    }
+    _appKitModal = ReownAppKitModal(
+      context: context,
+      appKit: appKit,
+      featuredWalletIds: {
+        // MetaMask id
+        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
+        // Rainbow Wallet ID
+        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
+      },
+      includedWalletIds: {
+        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
+        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
+      },
+    );
+
+    await _appKitModal.init();
+    debugPrint("✅ AppKitModal initialized");
+    appKit.onSessionConnect.subscribe((event) {
+      _session = event.session;
+      debugPrint("🔗 Session connected: ${event.session.topic}");
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error initializing wallet: $e');
-    } finally {
-      _setLoading(false);
-    }
-  }
+    });
 
-  /// Connect wallet (placeholder for MetaMask integration)
-  Future<bool> connectWallet() async {
-    _setLoading(true);
-    try {
-      // TODO: Implement actual MetaMask connection
-      // For now, simulate connection
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Simulate successful connection
-      const simulatedAddress = '0x742d35Cc6633C0532925a3b8D87C8d0e77b7c8';
-      
-      await _storageService.setBool(AppConstants.walletConnectedKey, true);
-      await _storageService.setString(AppConstants.walletAddressKey, simulatedAddress);
-      
-      _isWalletConnected = true;
-      _walletAddress = simulatedAddress;
-      
+    appKit.onSessionDelete.subscribe((event) {
+      debugPrint("❌ Session deleted: ${event.topic}");
+      _session = null;
       notifyListeners();
-      return true;
+    });
+
+    _isInitialized = true;
+
+    debugPrint("🎉 AppKit fully initialized");
+  }
+
+  Future<void> connectToWallet(BuildContext context) async {
+    await initAppKit(context);
+    debugPrint("🟢 Opening wallet modal...");
+
+    try {
+      // Check if already connected
+      if (_session != null) {
+        debugPrint("🔗 Already connected to: ${_session!.topic}");
+        return;
+      }
+
+      // Open modal and wait a bit
+      _appKitModal.openModalView();
+      debugPrint("📱 Modal opened, waiting for user interaction...");
     } catch (e) {
-      debugPrint('Error connecting wallet: $e');
-      return false;
-    } finally {
-      _setLoading(false);
+      debugPrint("❌ Error opening modal: $e");
     }
   }
 
-  /// Disconnect wallet
-  Future<void> disconnectWallet() async {
-    try {
-      _setLoading(true);
-      
-      await _storageService.setBool(AppConstants.walletConnectedKey, false);
-      await _storageService.setString(AppConstants.walletAddressKey, '');
-      
-      _isWalletConnected = false;
-      _walletAddress = '';
-      
+  Future<void> disconnect() async {
+    if (_session != null) {
+      debugPrint("👋 Disconnecting session: ${_session?.topic}");
+      await _appKitModal.appKit?.disconnectSession(
+        topic: _session!.topic,
+        reason: Errors.getSdkError(Errors.USER_DISCONNECTED).toSignError(),
+      );
+      _session = null;
+      debugPrint("✅ Disconnected");
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error disconnecting wallet: $e');
-      rethrow;
-    } finally {
-      _setLoading(false);
     }
   }
 
-  /// Get wallet balance (placeholder)
-  Future<double> getBalance() async {
-    if (!_isWalletConnected) return 0.0;
-    
-    // TODO: Implement actual balance fetching
-    await Future.delayed(const Duration(seconds: 1));
-    return 2.47; // Mock balance
-  }
+  // Future<void> getWalletInfo() async {
+  //   if (_appKitModal.appKit != null) {
+  //     final session = _appKitModal.session!;
 
-  /// Send transaction (placeholder)
-  Future<String?> sendTransaction({
-    required String to,
-    required String value,
-  }) async {
-    if (!_isWalletConnected) return null;
-    
-    _setLoading(true);
-    try {
-      // TODO: Implement actual transaction sending
-      await Future.delayed(const Duration(seconds: 3));
-      
-      // Mock transaction hash
-      return '0x${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
-    } catch (e) {
-      debugPrint('Error sending transaction: $e');
-      return null;
-    } finally {
-      _setLoading(false);
-    }
-  }
+  //     final accounts = session.namespaces!['eip155']?.accounts ?? [];
 
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
+  //     if (accounts.isNotEmpty) {
+  //       // account format: "eip155:chainId:0xWalletAddress"
+  //       final parts = accounts.first.split(":");
+
+  //       final chainId = parts[1];
+  //       final address = parts[2];
+
+  //       debugPrint("✅ Address: $address");
+  //       debugPrint("🌐 Chain ID: $chainId");
+  //     }
+  //   } else {
+  //     debugPrint("⚠️ Chưa có session ví nào.");
+  //   }
+  // }
+
+  String? get walletAddress {
+    if (_session == null) return null;
+    return _session!.namespaces["eip155"]?.accounts.first.split(":").last;
   }
 }
