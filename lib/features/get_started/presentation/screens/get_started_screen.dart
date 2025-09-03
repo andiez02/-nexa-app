@@ -17,6 +17,11 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -139,8 +144,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
                   ),
                 ),
               ),
-              // },
-              // ),
               const SizedBox(height: 16),
             ],
           ),
@@ -160,7 +163,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
 
       walletProvider.addListener(() {
         if (walletProvider.walletAddress != null) {
-          context.go(AppRoutes.home);
+          context.go(AppRoutes.wallet);
         }
       });
 
@@ -188,7 +191,6 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
         );
       }
     } catch (e) {
-      // Show error feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

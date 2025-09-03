@@ -45,6 +45,9 @@ dependencies:
   http: ^1.5.0
   url_launcher: ^6.3.2
   reown_appkit: ^1.6.0
+  flutter_dotenv: ^6.0.0
+  image_picker: ^1.2.0
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:
@@ -75,8 +78,16 @@ flutter:
     - assets/images/onboarding_3.png
     - assets/images/get_started_image.png
     - assets/images/metamask-icon.png
+    - assets/images/ethereum.png
+    - assets/images/nft_image_1.png
+    - assets/images/nft_image_2.png
+    - assets/images/nft_image_3.png
+    - assets/images/nft_image_4.png
+    - assets/images/nft_image_5.png
+    - assets/images/nft_image_6.png
 
-  ############# Svgs
+    ############# Env
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

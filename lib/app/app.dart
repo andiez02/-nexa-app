@@ -16,9 +16,7 @@ class NexaApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => getIt<AppProvider>()..initialize(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => getIt<WalletProvider>()..initAppKit(context),
-        ),
+        ChangeNotifierProvider(create: (_) => getIt<WalletProvider>()),
       ],
       child: MaterialApp.router(
         title: 'Nexa App',
