@@ -144,12 +144,14 @@ class MainAppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          false, // Keep bottom bar fixed when keyboard appears
       body: Stack(
         children: [
           // Screen content takes full space
           navigationShell,
 
-          // Bottom navigation overlays on top
+          // Bottom navigation overlays on top and stays fixed
           Positioned(
             left: 0,
             right: 0,

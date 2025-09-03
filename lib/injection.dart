@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/storage_service.dart';
 import 'app/app_provider.dart';
 import 'features/wallet/wallet_provider.dart';
@@ -16,6 +17,8 @@ Future<void> configureDependencies() async {
   if (storageService is StorageService) {
     await storageService.init();
   }
+
+  await dotenv.load();
 
   // Feature Providers
   getIt.registerLazySingleton<WalletProvider>(() => WalletProvider());

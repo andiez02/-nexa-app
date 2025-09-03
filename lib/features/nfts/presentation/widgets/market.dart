@@ -99,7 +99,7 @@ Widget _buildNFTCard(int index) {
 
         // NFT Info
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

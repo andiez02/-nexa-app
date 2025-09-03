@@ -13,16 +13,16 @@ class PinataService {
 
   // Get API keys from environment variables
   final String pinataApiKey = dotenv.env['PINATA_API_KEY']!;
-  final String pinataApiSecret = dotenv.env['PINATA_SECRET_API_KEY']!;
+  final String pinataSecretApiKey = dotenv.env['PINATA_SECRET_API_KEY']!;
 
   /// Uploads a file to Pinata IPFS.
-  /// Returns the IPFS hash (CID) if successful, otherwise throws an exception.
+  /// Returns the IPFS hash (CID) if successful, otherwise throws an exception.  ----- Content Identifier
   Future<String> uploadImage(File imageFile) async {
     try {
       final uri = Uri.parse(pinataPinFileUrl);
       final request = http.MultipartRequest('POST', uri)
         ..headers['pinata_api_key'] = pinataApiKey
-        ..headers['pinata_secret_api_key'] = pinataApiSecret
+        ..headers['pinata_secret_api_key'] = pinataSecretApiKey
         ..files.add(
           await http.MultipartFile.fromPath(
             'file',
@@ -42,41 +42,6 @@ class PinataService {
       }
     } catch (e) {
       throw Exception('Failed to upload image to Pinata: $e');
-    }
-  }
-
-  /// Uploads metadata JSON to Pinata IPFS.
-  /// Returns the IPFS hash (CID) if successful, otherwise throws an exception.
-  Future<String> uploadMetadata(
-    String name,
-    String description,
-    String imageCid,
-  ) async {
-    final metadata = {
-      'name': name,
-      'description': description,
-      'image': 'ipfs://$imageCid',
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse(pinataPinJsonUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'pinata_api_key': pinataApiKey,
-          'pinata_secret_api_key': pinataApiSecret,
-        },
-        body: jsonEncode(metadata),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        return responseData['IpfsHash'];
-      } else {
-        throw Exception('Failed to upload metadata: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('An error occurred during metadata upload: $e');
     }
   }
 }
