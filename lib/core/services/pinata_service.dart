@@ -44,4 +44,43 @@ class PinataService {
       throw Exception('Failed to upload image to Pinata: $e');
     }
   }
+
+  Future<String> uploadMetadata(
+    String name,
+    String description,
+    String imageCid,
+  ) async {
+    final metadata = {
+      'name': name,
+      'description': description,
+      'image': imageCid,
+    };
+
+    // Add pinataMetadata for proper display in Pinata dashboard
+    final requestBody = {
+      'pinataContent': metadata,
+      'pinataMetadata': {'name': '${name}_metadata.json'},
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(pinataPinJsonUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'pinata_api_key': pinataApiKey,
+          'pinata_secret_api_key': pinataSecretApiKey,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        return responseData['IpfsHash'];
+      } else {
+        throw Exception('Failed to upload metadata: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to upload metadata to Pinata: $e');
+    }
+  }
 }

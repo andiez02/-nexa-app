@@ -2,8 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:nexa_app/app/constants.dart';
 import 'package:nexa_app/core/services/pinata_service.dart';
+import 'package:nexa_app/core/services/smart_contract_service.dart';
+import 'package:nexa_app/features/wallet/wallet_provider.dart';
 
 class MintNFTPage extends StatefulWidget {
   const MintNFTPage({super.key});
@@ -25,7 +28,9 @@ class _MintNFTPageState extends State<MintNFTPage> {
   final GlobalKey _descriptionFieldKey = GlobalKey();
   String _status = 'No image selected.';
   String? _imageCid;
+  String? _metadataCid;
   bool _isUploading = false;
+  bool _isMinting = false;
 
   @override
   void initState() {
@@ -145,10 +150,82 @@ class _MintNFTPageState extends State<MintNFTPage> {
         _imageCid = imageCid;
         _status = 'Image uploaded successfully!';
       });
+
+      final String metadataCid = await _pinataService.uploadMetadata(
+        _nameController.text,
+        _descriptionController.text,
+        'ipfs://$imageCid',
+      );
+      setState(() {
+        _metadataCid = metadataCid;
+        _status = 'Metadata uploaded successfully!';
+        _isUploading = false;
+      });
     } catch (e) {
       setState(() {
         _status = 'Error occurred: $e';
         _isUploading = false;
+      });
+    }
+  }
+
+  Future<void> _mintNFT() async {
+    if (_metadataCid == null) {
+      setState(() {
+        _status = 'Please upload metadata first.';
+      });
+      return;
+    }
+
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+    if (!walletProvider.isConnected) {
+      setState(() {
+        _status = 'Please connect your wallet first.';
+      });
+      return;
+    }
+
+    if (walletProvider.appKitModal == null) {
+      setState(() {
+        _status = 'Wallet not properly initialized.';
+      });
+      return;
+    }
+
+    if (walletProvider.walletAddress == null) {
+      setState(() {
+        _status = 'Wallet address not found.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isMinting = true;
+      _status = 'Minting NFT...';
+    });
+
+    try {
+      final smartContractService = SmartContractService(
+        walletProvider.appKitModal!,
+      );
+      await smartContractService.init();
+
+      final tokenURI = 'ipfs://$_metadataCid';
+      final recipientAddress = walletProvider.walletAddress!;
+
+      final txHash = await smartContractService.mintNFT(
+        recipientAddress,
+        tokenURI,
+      );
+
+      setState(() {
+        _status = 'NFT minted successfully! TX: ${txHash.substring(0, 10)}...';
+        _isMinting = false;
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Minting failed: $e';
+        _isMinting = false;
       });
     }
   }
@@ -448,6 +525,103 @@ class _MintNFTPageState extends State<MintNFTPage> {
                       ],
                     ),
                   ),
+                const SizedBox(height: 20),
+
+                // Metadata CID Display
+                if (_metadataCid != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.success.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Metadata CID:",
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.success,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText(
+                          _metadataCid!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.success,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // Mint NFT Button
+                if (_metadataCid != null && !_isMinting)
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isMinting ? null : _mintNFT,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        elevation: 8,
+                        shadowColor: AppColors.success.withOpacity(0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: _isMinting
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  "Minting NFT...",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.generating_tokens, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Mint NFT",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+
                 const SizedBox(height: 20),
               ],
             ),

@@ -11,6 +11,7 @@ class WalletProvider extends ChangeNotifier {
 
   SessionData? get session => _session;
   bool get isConnected => _session != null;
+  ReownAppKitModal? get appKitModal => _appKitModal;
 
   static const String projectId = 'be2f3ed58f943aa53db990ddff2a31b5';
 
