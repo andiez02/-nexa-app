@@ -111,7 +111,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // USDC Balance Section
+                // Sepolia ETH Balance Section
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -131,7 +131,7 @@ class _WalletScreenState extends State<WalletScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            "USDC Balance (Sepolia)",
+                            "Sepolia ETH Balance",
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -142,7 +142,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       ),
                       const SizedBox(height: 10),
                       FutureBuilder<String>(
-                        future: walletProvider.getUsdcBalance(),
+                        future: walletProvider.getEthBalance(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -167,7 +167,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             );
                           } else if (snapshot.hasError) {
                             return Text(
-                              "Lỗi: ${snapshot.error}",
+                              "Error: ${snapshot.error}",
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 color: Colors.red,
@@ -177,7 +177,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             return Row(
                               children: [
                                 Text(
-                                  "${snapshot.data ?? '0'} USDC",
+                                  "${snapshot.data ?? '0'} ETH",
                                   style: GoogleFonts.inter(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w700,

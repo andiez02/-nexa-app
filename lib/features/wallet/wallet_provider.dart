@@ -117,6 +117,80 @@ class WalletProvider extends ChangeNotifier {
     return _session!.namespaces["eip155"]?.accounts.first.split(":").last;
   }
 
+  /// Get Sepolia ETH balance
+  Future<String> getEthBalance() async {
+    try {
+      if (walletAddress == null) {
+        return '0';
+      }
+
+      final client = Client();
+
+      try {
+        final response = await client
+            .post(
+              Uri.parse(sepoliaRpcUrls),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'jsonrpc': '2.0',
+                'method': 'eth_getBalance',
+                'params': [walletAddress, 'latest'],
+                'id': 1,
+              }),
+            )
+            .timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+          if (jsonResponse['error'] != null) {
+            debugPrint('❌ JSON-RPC Error: ${jsonResponse['error']}');
+          }
+
+          final String? result = jsonResponse['result'];
+
+          if (result != null && result != '0x' && result != '0x0') {
+            try {
+              // Remove 0x prefix and parse hex to BigInt
+              String cleanHex = result.toLowerCase();
+              if (cleanHex.startsWith('0x')) {
+                cleanHex = cleanHex.substring(2);
+              }
+
+              final BigInt balance = BigInt.parse(cleanHex, radix: 16);
+              final double ethBalance =
+                  balance.toDouble() / 1e18; // ETH has 18 decimals
+
+              debugPrint('✅ ETH Balance: $ethBalance');
+              client.close();
+              return ethBalance.toStringAsFixed(6);
+            } catch (parseError) {
+              debugPrint('❌ Parse error for result "$result": $parseError');
+            }
+          } else {
+            debugPrint('💡 Zero ETH balance');
+            client.close();
+            return '0.000000';
+          }
+        } else {
+          debugPrint('❌ HTTP ${response.statusCode}');
+          client.close();
+          return '0';
+        }
+      } catch (e) {
+        debugPrint('❌ Error getting ETH balance: $e');
+        client.close();
+        return '0';
+      }
+
+      client.close();
+      return '0';
+    } catch (e) {
+      debugPrint('❌ Error getting ETH balance: $e');
+      return '0';
+    }
+  }
+
   /// Lấy số dư USDC trên Sepolia testnet
   Future<String> getUsdcBalance() async {
     try {
