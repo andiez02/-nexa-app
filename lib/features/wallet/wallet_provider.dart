@@ -65,6 +65,16 @@ class WalletProvider extends ChangeNotifier {
     );
 
     await _appKitModal?.init();
+    // Attempt to restore any existing active session persisted by AppKit
+    final wallet = _appKitModal?.appKit;
+    if (wallet != null) {
+      final activeSessions = wallet.getActiveSessions();
+      if (activeSessions.isNotEmpty) {
+        _session = activeSessions.values.first;
+        notifyListeners();
+      }
+    }
+    
     appKit.onSessionConnect.subscribe((event) {
       _session = event.session;
       notifyListeners();

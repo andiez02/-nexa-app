@@ -19,6 +19,16 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize AppKit and auto-navigate if we already have a session
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final walletProvider = context.read<WalletProvider>();
+      await walletProvider.initAppKit(context);
+      if (walletProvider.walletAddress != null) {
+        if (!mounted) return;
+        context.go(AppRoutes.home);
+      }
+    });
   }
 
   @override
@@ -162,8 +172,11 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       await walletProvider.connectToWallet(context);
 
       walletProvider.addListener(() {
+
+        print('🥦 ~ walletProvider.walletAddress: ${walletProvider.walletAddress}');
+
         if (walletProvider.walletAddress != null) {
-          context.go(AppRoutes.wallet);
+            context.go(AppRoutes.home);
         }
       });
 
