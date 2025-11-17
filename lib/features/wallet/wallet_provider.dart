@@ -49,19 +49,31 @@ class WalletProvider extends ChangeNotifier {
     if (!context.mounted) {
       return;
     }
+
     _appKitModal = ReownAppKitModal(
       context: context,
       appKit: appKit,
+      // Limit to Sepolia (eip155:11155111)
+      optionalNamespaces: {
+        'eip155': RequiredNamespace(
+          chains: ['eip155:$sepoliaChainId'],
+          methods: [
+            'eth_sendTransaction',
+            'personal_sign',
+            'eth_signTypedData',
+            'eth_sign',
+          ],
+          events: ['accountsChanged', 'chainChanged'],
+        ),
+      },
       featuredWalletIds: {
         // MetaMask id
         'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
-        // Rainbow Wallet ID
-        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
+        // Phantom Wallet ID
+        'ea1c04f0460f0f05d68b09a7c7e60cff787f0fb9dbbc8d8cb12c325a4e6d14f0',
       },
-      includedWalletIds: {
-        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
-        '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
-      },
+      // featuredWalletIds: {},
+      // Do not restrict includedWalletIds to ensure wallets are listed
     );
 
     await _appKitModal?.init();
@@ -74,7 +86,7 @@ class WalletProvider extends ChangeNotifier {
         notifyListeners();
       }
     }
-    
+
     appKit.onSessionConnect.subscribe((event) {
       _session = event.session;
       notifyListeners();
@@ -96,7 +108,6 @@ class WalletProvider extends ChangeNotifier {
       if (_session != null) {
         return;
       }
-
       // Open modal and wait a bit
       _appKitModal?.openModalView();
     } catch (e) {

@@ -62,7 +62,15 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 	<string>metamask</string>
+	<string>rainbow</string>
+	<string>wc</string>
 	<!-- Add other wallet schemes names here -->
 	</array>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app uses the local network to communicate with the Dart DevTools debugger.</string>
 </dict>
 </plist>

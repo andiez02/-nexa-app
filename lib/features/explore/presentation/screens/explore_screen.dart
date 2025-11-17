@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/constants.dart';
+import '../widgets/marketplace_banner.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/nft_grid.dart';
 
@@ -14,8 +15,7 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
-  
-  
+
   @override
   void initState() {
     super.initState();
@@ -35,11 +35,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: Column(
           children: [
             _buildAppBar(),
+            const MarketplaceBanner(),
             SearchBarWidget(controller: _searchController),
             const SizedBox(height: 16),
-            Expanded(
-              child: NFTGrid(),
-            ),
+            Expanded(child: NFTGrid()),
           ],
         ),
       ),
@@ -73,11 +72,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.tune,
-              color: AppColors.gray600,
-              size: 20,
-            ),
+            child: const Icon(Icons.tune, color: AppColors.gray600, size: 20),
           ),
         ],
       ),

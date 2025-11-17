@@ -4,14 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/constants.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final Map<String, dynamic> profileData;
+  final String avatar;
+  final String displayName;
   final String walletAddress;
   final Function(String) onCopyAddress;
   final VoidCallback onEditProfile;
 
   const ProfileHeader({
     super.key,
-    required this.profileData,
+    required this.avatar,
+    required this.displayName,
     required this.walletAddress,
     required this.onCopyAddress,
     required this.onEditProfile,
@@ -61,7 +63,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    profileData['avatar'],
+                    avatar,
                     style: GoogleFonts.inter(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
@@ -75,40 +77,21 @@ class ProfileHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            profileData['displayName'],
-                            style: GoogleFonts.inter(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.black,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (profileData['isVerified']) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      displayName,
+                      style: GoogleFonts.inter(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     GestureDetector(
-                      onTap: () => onCopyAddress(walletAddress),
+                      onTap: walletAddress.isNotEmpty
+                          ? () => onCopyAddress(walletAddress)
+                          : null,
                       child: Row(
                         children: [
                           Text(
@@ -119,21 +102,15 @@ class ProfileHeader extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.copy,
-                            size: 14,
-                            color: AppColors.gray400,
-                          ),
+                          if (walletAddress.isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.copy,
+                              size: 14,
+                              color: AppColors.gray400,
+                            ),
+                          ],
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profileData['joinedDate'],
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.gray500,
                       ),
                     ),
                   ],
@@ -143,45 +120,6 @@ class ProfileHeader extends StatelessWidget {
           ),
           
           const SizedBox(height: 16),
-          
-          // Bio
-          if (profileData['bio'] != null && profileData['bio'].isNotEmpty) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                profileData['bio'],
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.gray700,
-                  height: 1.4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          
-          // Edit Profile Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onEditProfile,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                side: const BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Edit Profile',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

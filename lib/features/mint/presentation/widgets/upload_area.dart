@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import '../../../../app/constants.dart';
 
@@ -37,7 +39,7 @@ class UploadArea extends StatelessWidget {
         const SizedBox(height: 12),
         
         GestureDetector(
-          onTap: _selectImage,
+          onTap: () => _selectImage(context),
           child: Container(
             width: double.infinity,
             height: 200,
@@ -50,7 +52,7 @@ class UploadArea extends StatelessWidget {
               ),
               image: imagePath != null
                   ? DecorationImage(
-                      image: AssetImage('assets/images/nft_image_1.png'), // Mock image
+                      image: FileImage(File(imagePath!)),
                       fit: BoxFit.cover,
                     )
                   : null,
@@ -120,8 +122,17 @@ class UploadArea extends StatelessWidget {
     );
   }
 
-  void _selectImage() {
-    // Mock image selection
-    onImageSelected('nft_image_1.png');
+  Future<void> _selectImage(BuildContext context) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        onImageSelected(picked.path);
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to pick image')),
+      );
+    }
   }
 }

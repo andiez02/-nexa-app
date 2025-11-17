@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/constants.dart';
-import '../widgets/banner_slider.dart';
+import '../widgets/hero_slider.dart';
 import '../widgets/hot_collections_section.dart';
-import '../widgets/trending_nfts_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,12 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildAppBar(),
               const SizedBox(height: 20),
-              const BannerSlider(),
-              const SizedBox(height: 32),
-              const HotCollectionsSection(),
-              const SizedBox(height: 32),
-              const TrendingNFTsSection(),
-              const SizedBox(height: 100), // Space for bottom nav
+              const HeroSlider(),
+              const SizedBox(height: 24),
+              HotCollectionsSection(),
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -46,13 +43,14 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             child: Image.asset(
-              'assets/images/nexa_logo.png',
+              'assets/images/icon.jpg',
               width: 32,
               height: 32,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // App name
           Text(
             'Nexa',
@@ -62,9 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.black,
             ),
           ),
-          
+
           const Spacer(),
-          
+
           // Search icon
           Container(
             padding: const EdgeInsets.all(8),
@@ -79,11 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.search,
-              color: AppColors.gray600,
-              size: 20,
-            ),
+            child: const Icon(Icons.search, color: AppColors.gray600, size: 20),
           ),
         ],
       ),

@@ -2,19 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/constants.dart';
+import '../../../../data/models/nft_model.dart';
 
 class PriceSection extends StatelessWidget {
-  final String price;
-  final String currency;
-  final bool isForSale;
-  final String saleType;
+  final NFTModel nft;
 
   const PriceSection({
     super.key,
-    required this.price,
-    required this.currency,
-    required this.isForSale,
-    required this.saleType,
+    required this.nft,
   });
 
   @override
@@ -36,17 +31,17 @@ class PriceSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isForSale) ...[
+          if (nft.isListed && nft.price != null) ...[
             Row(
               children: [
-                Icon(
-                  saleType == 'auction' ? Icons.gavel : Icons.sell,
+                const Icon(
+                  Icons.sell,
                   color: AppColors.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  saleType == 'auction' ? 'Current Bid' : 'Current Price',
+                  'Current Price',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -65,7 +60,7 @@ class PriceSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  price,
+                  nft.price?.toStringAsFixed(4) ?? '0.0000',
                   style: GoogleFonts.inter(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
@@ -74,7 +69,7 @@ class PriceSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  currency,
+                  'ETH',
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -85,42 +80,13 @@ class PriceSection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '\$${(double.parse(price) * 2340).toStringAsFixed(2)} USD', // Mock conversion
+              '\$${((nft.price ?? 0) * 2340).toStringAsFixed(2)} USD', // Mock conversion
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 color: AppColors.gray500,
               ),
             ),
-            
-            if (saleType == 'auction') ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.timer,
-                      color: AppColors.error,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Auction ends in 2h 34m',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ] else ...[
             Container(
               padding: const EdgeInsets.all(16),

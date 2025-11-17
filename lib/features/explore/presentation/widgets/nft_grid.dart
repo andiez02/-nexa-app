@@ -1,94 +1,209 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/constants.dart';
+import '../../../../data/models/nft_model.dart';
+import '../../../../data/services/nft_service.dart';
+import '../../../../core/services/smart_contract_service.dart';
+import '../../../../features/wallet/wallet_provider.dart';
 
-class NFTGrid extends StatelessWidget {
+class NFTGrid extends StatefulWidget {
   const NFTGrid({super.key});
 
-  // Mock NFT data
-  final List<Map<String, String>> nfts = const [
-    {
-      'id': '1',
-      'name': 'Cosmic Dreams #1234',
-      'price': '2.5 ETH',
-      'image': 'nft_image_1',
-      'creator': 'ArtistDAO',
-      'owner': '0x1234...5678',
-      'liked': 'true',
-      'views': '1.2k',
-    },
-    {
-      'id': '2',
-      'name': 'Digital Genesis #567',
-      'price': '1.8 ETH',
-      'image': 'nft_image_2',
-      'creator': 'CryptoArt',
-      'owner': '0x9876...4321',
-      'liked': 'false',
-      'views': '856',
-    },
-    {
-      'id': '3',
-      'name': 'Pixel Warriors #890',
-      'price': '3.2 ETH',
-      'image': 'nft_image_3',
-      'creator': 'PixelMaster',
-      'owner': '0x1111...2222',
-      'liked': 'true',
-      'views': '2.1k',
-    },
-    {
-      'id': '4',
-      'name': 'Neon Landscapes #123',
-      'price': '0.9 ETH',
-      'image': 'nft_image_4',
-      'creator': 'NeonArt',
-      'owner': '0x3333...4444',
-      'liked': 'false',
-      'views': '643',
-    },
-    {
-      'id': '5',
-      'name': 'Abstract Visions #456',
-      'price': '4.1 ETH',
-      'image': 'nft_image_5',
-      'creator': 'AbstractDAO',
-      'owner': '0x5555...6666',
-      'liked': 'true',
-      'views': '3.4k',
-    },
-    {
-      'id': '6',
-      'name': 'Cyber Punk #789',
-      'price': '1.5 ETH',
-      'image': 'nft_image_6',
-      'creator': 'CyberArt',
-      'owner': '0x7777...8888',
-      'liked': 'false',
-      'views': '892',
-    },
-  ];
+  @override
+  State<NFTGrid> createState() => _NFTGridState();
+}
+
+class _NFTGridState extends State<NFTGrid> {
+  static List<NFTModel>? _cachedListedNFTs;
+  static DateTime? _cacheTimestamp;
+  static const Duration _cacheTTL = Duration(minutes: 2);
+
+  List<NFTModel> _listedNFTs = [];
+  bool _isLoading = true;
+  String? _currentUserAddress;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadListedNFTs();
+  }
+
+  Future<void> _loadListedNFTs({bool forceRefresh = false}) async {
+    if (!forceRefresh &&
+        _cachedListedNFTs != null &&
+        _cacheTimestamp != null &&
+        DateTime.now().difference(_cacheTimestamp!) < _cacheTTL) {
+      setState(() {
+        _listedNFTs = _cachedListedNFTs!;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final walletProvider = Provider.of<WalletProvider>(
+        context,
+        listen: false,
+      );
+
+      if (walletProvider.appKitModal == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Initialize SmartContractService
+      final smartContractService = SmartContractService(
+        walletProvider.appKitModal!,
+      );
+
+      // Initialize the service (load ABIs)
+      await smartContractService.init();
+
+      // Get current user address
+      _currentUserAddress = smartContractService.getCurrentUserAddress();
+      debugPrint('👤 Current user address: $_currentUserAddress');
+
+      // Create NFTService
+      final nftService = NFTService(smartContractService);
+      final listedNFTs = await nftService.fetchAllListedNFTs(
+        currentUserAddress: _currentUserAddress,
+      );
+
+      debugPrint('📊 Explore screen loaded ${listedNFTs.length} listed NFTs');
+
+      if (mounted) {
+        setState(() {
+          _listedNFTs = listedNFTs;
+          _isLoading = false;
+        });
+      }
+      _cachedListedNFTs = listedNFTs;
+      _cacheTimestamp = DateTime.now();
+    } catch (e) {
+      debugPrint('❌ Error loading listed NFTs: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  bool _isMyNFT(NFTModel nft) {
+    if (_currentUserAddress == null) return false;
+    return nft.seller?.toLowerCase() == _currentUserAddress!.toLowerCase() ||
+        nft.owner.toLowerCase() == _currentUserAddress!.toLowerCase();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.7,
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 16),
+            Text('Loading marketplace...'),
+          ],
+        ),
+      );
+    }
+
+    if (_listedNFTs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: AppColors.gray200,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.store_outlined,
+                size: 40,
+                color: AppColors.gray500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No NFTs listed yet',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.gray600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Be the first to list an NFT!',
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.gray500),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _loadListedNFTs(forceRefresh: true),
+      child: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.7,
+        ),
+        itemCount: _listedNFTs.length,
+        itemBuilder: (context, index) =>
+            _buildNFTCard(context, _listedNFTs[index]),
       ),
-      itemCount: nfts.length,
-      itemBuilder: (context, index) => _buildNFTCard(context, nfts[index]),
     );
   }
 
-  Widget _buildNFTCard(BuildContext context, Map<String, String> nft) {
+  Widget _buildNFTCard(BuildContext context, NFTModel nft) {
+    final isMyNFT = _isMyNFT(nft);
+
     return GestureDetector(
-      onTap: () => context.go('/nft-detail/${nft['id']}'),
+      onTap: () async {
+        // Navigate to detail screen and wait for result
+        final result = await context.pushNamed(
+          'nft-detail',
+          pathParameters: {'id': nft.tokenId},
+        );
+
+        // If purchase was successful, refresh the listed NFTs
+        if (result == true && mounted) {
+          debugPrint('🔄 Refreshing explore screen after purchase...');
+          // Clear cache and reload
+          final walletProvider = Provider.of<WalletProvider>(
+            context,
+            listen: false,
+          );
+          if (walletProvider.appKitModal != null) {
+            final smartContractService = SmartContractService(
+              walletProvider.appKitModal!,
+            );
+            await smartContractService.init();
+            final nftService = NFTService(smartContractService);
+            nftService.clearListedNFTsCache(); // Clear cache
+            _clearLocalCache();
+            _loadListedNFTs(forceRefresh: true); // Reload
+          }
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -104,90 +219,144 @@ class NFTGrid extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // NFT Image with overlay
+            // NFT Image
             Expanded(
               flex: 4,
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/${nft['image']}.png'),
-                    fit: BoxFit.cover,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
                   ),
+                  color: AppColors.gray200,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.1),
-                      ],
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Like button
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
-                            shape: BoxShape.circle,
+                child: Stack(
+                  children: [
+                    // NFT Image
+                    if (nft.imageUrl.isNotEmpty)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
                           ),
-                          child: Icon(
-                            nft['liked'] == 'true'
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: nft['liked'] == 'true'
-                                ? Colors.red
-                                : AppColors.gray600,
-                            size: 16,
+                          child: Image.network(
+                            nft.imageUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.gray200,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: AppColors.gray500,
+                                    size: 40,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
-                      
-                      // Views counter
-                      Positioned(
-                        bottom: 8,
-                        left: 8,
+
+                    // Placeholder for empty image
+                    if (nft.imageUrl.isEmpty)
+                      Positioned.fill(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(8),
+                          color: AppColors.gray200,
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              color: AppColors.gray500,
+                              size: 40,
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.visibility,
-                                color: Colors.white,
-                                size: 12,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                nft['views']!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                        ),
+                      ),
+
+                    // Gradient overlay
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.1),
                             ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    // "My NFT" badge
+                    if (isMyNFT)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'My NFT',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Token ID badge
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '#${nft.tokenId}',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            
+
             // NFT Info
             Expanded(
               flex: 3,
@@ -198,7 +367,7 @@ class NFTGrid extends StatelessWidget {
                   children: [
                     // NFT name
                     Text(
-                      nft['name']!,
+                      nft.name,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -208,10 +377,10 @@ class NFTGrid extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    
-                    // Creator info
+
+                    // Collection info
                     Text(
-                      'by ${nft['creator']}',
+                      nft.collection ?? 'Nexa NFT Collection',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: AppColors.gray500,
@@ -220,10 +389,10 @@ class NFTGrid extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const Spacer(),
-                    
-                    // Price and owner
+
+                    // Price or "My NFT"
                     Row(
                       children: [
                         Expanded(
@@ -231,7 +400,7 @@ class NFTGrid extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Price',
+                                isMyNFT ? 'Status' : 'Price',
                                 style: GoogleFonts.inter(
                                   fontSize: 10,
                                   color: AppColors.gray500,
@@ -240,18 +409,22 @@ class NFTGrid extends StatelessWidget {
                               ),
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.currency_bitcoin,
-                                    size: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                  const SizedBox(width: 2),
+                                  if (!isMyNFT) ...[
+                                    Icon(
+                                      Icons.currency_bitcoin,
+                                      size: 12,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ],
                                   Text(
-                                    nft['price']!,
+                                    isMyNFT ? 'My NFT' : nft.formattedPrice,
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.black,
+                                      color: isMyNFT
+                                          ? AppColors.primary
+                                          : AppColors.black,
                                     ),
                                   ),
                                 ],
@@ -259,18 +432,20 @@ class NFTGrid extends StatelessWidget {
                             ],
                           ),
                         ),
-                        
-                        // Owner avatar placeholder
+
+                        // Owner avatar
                         Container(
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: isMyNFT
+                                ? AppColors.primary
+                                : AppColors.gray400,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: Text(
-                              nft['owner']![2],
+                              nft.seller?.substring(2, 3).toUpperCase() ?? '?',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -289,5 +464,10 @@ class NFTGrid extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _clearLocalCache() {
+    _cachedListedNFTs = null;
+    _cacheTimestamp = null;
   }
 }

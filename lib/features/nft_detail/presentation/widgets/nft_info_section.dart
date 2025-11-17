@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/constants.dart';
+import '../../../../data/models/nft_model.dart';
 
 class NFTInfoSection extends StatelessWidget {
-  final Map<String, dynamic> nftData;
+  final NFTModel nft;
 
   const NFTInfoSection({
     super.key,
-    required this.nftData,
+    required this.nft,
   });
 
   @override
@@ -35,7 +36,7 @@ class NFTInfoSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  nftData['name'],
+                  nft.name,
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -50,7 +51,7 @@ class NFTInfoSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  nftData['tokenId'],
+                  '#${nft.tokenId}',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -61,6 +62,19 @@ class NFTInfoSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+          
+          // Collection name if available
+          if (nft.collection != null && nft.collection!.isNotEmpty) ...[
+            Text(
+              nft.collection!,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           
           // Blockchain info
           Row(
@@ -79,7 +93,7 @@ class NFTInfoSection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                nftData['blockchain'],
+                'Ethereum',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -101,7 +115,7 @@ class NFTInfoSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            nftData['description'],
+            nft.description,
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
@@ -112,11 +126,11 @@ class NFTInfoSection extends StatelessWidget {
           const SizedBox(height: 16),
           
           // Contract and Token ID info
-          _buildInfoRow('Contract Address', nftData['contract']),
+          _buildInfoRow('Contract Address', nft.contractAddress ?? 'Unknown'),
           const SizedBox(height: 8),
           _buildInfoRow('Token Standard', 'ERC-721'),
           const SizedBox(height: 8),
-          _buildInfoRow('Blockchain', nftData['blockchain']),
+          _buildInfoRow('Blockchain', 'Ethereum'),
         ],
       ),
     );

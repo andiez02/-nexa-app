@@ -2,21 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/constants.dart';
+import '../../../../data/models/nft_model.dart';
 
 class ActionButtons extends StatelessWidget {
-  final bool isForSale;
-  final String saleType;
+  final NFTModel nft;
   final VoidCallback onBuyNow;
   final VoidCallback onPlaceBid;
   final VoidCallback onMakeOffer;
+  final VoidCallback? onListForSale;
+  final VoidCallback? onCancelListing;
+  final bool isOwner;
 
   const ActionButtons({
     super.key,
-    required this.isForSale,
-    required this.saleType,
+    required this.nft,
     required this.onBuyNow,
     required this.onPlaceBid,
     required this.onMakeOffer,
+    this.onListForSale,
+    this.onCancelListing,
+    this.isOwner = false,
   });
 
   @override
@@ -25,71 +30,39 @@ class ActionButtons extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          if (isForSale) ...[
-            Row(
-              children: [
-                if (saleType == 'fixed') ...[
-                  Expanded(
-                    flex: 2,
-                    child: _buildPrimaryButton(
-                      text: 'Buy Now',
-                      icon: Icons.shopping_cart,
-                      onPressed: onBuyNow,
-                      isPrimary: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSecondaryButton(
-                      text: 'Make Offer',
-                      icon: Icons.local_offer,
-                      onPressed: onMakeOffer,
-                    ),
-                  ),
-                ] else if (saleType == 'auction') ...[
-                  Expanded(
-                    flex: 2,
-                    child: _buildPrimaryButton(
-                      text: 'Place Bid',
-                      icon: Icons.gavel,
-                      onPressed: onPlaceBid,
-                      isPrimary: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSecondaryButton(
-                      text: 'Watch',
-                      icon: Icons.visibility,
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ] else ...[
+          if (isOwner) ...[
+            // Owner view - show listing button if not listed
+            if (!nft.isListed && onListForSale != null)
+              _buildPrimaryButton(
+                text: 'List for Sale',
+                icon: Icons.sell,
+                onPressed: onListForSale!,
+                isPrimary: true,
+              )
+            else if (nft.isListed && onCancelListing != null)
+              _buildSecondaryButton(
+                text: 'Cancel Listing',
+                icon: Icons.cancel,
+                onPressed: onCancelListing!,
+              ),
+          ] else if (nft.isListed && nft.price != null) ...[
+            // Not owner, NFT is listed - show buy button
             Row(
               children: [
                 Expanded(
-                  child: _buildSecondaryButton(
-                    text: 'Make Offer',
-                    icon: Icons.local_offer,
-                    onPressed: onMakeOffer,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildSecondaryButton(
-                    text: 'Add to Watchlist',
-                    icon: Icons.bookmark_border,
-                    onPressed: () {},
+                  flex: 2,
+                  child: _buildPrimaryButton(
+                    text: 'Buy Now',
+                    icon: Icons.shopping_cart,
+                    onPressed: onBuyNow,
+                    isPrimary: true,
                   ),
                 ),
               ],
             ),
           ],
           const SizedBox(height: 12),
-          
+
           // Secondary actions row
           Row(
             children: [

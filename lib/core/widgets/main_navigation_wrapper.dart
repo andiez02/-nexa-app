@@ -51,6 +51,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
         onPageChanged: _onPageChanged,
         children: const [
           HomeScreen(),

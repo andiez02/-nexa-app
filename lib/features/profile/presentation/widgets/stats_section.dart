@@ -29,13 +29,9 @@ class StatsSection extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildStatItem('Followers', stats['followers']!, Icons.people)),
+          Expanded(child: _buildStatItem('Created', stats['created'] ?? '0', Icons.create)),
           _buildDivider(),
-          Expanded(child: _buildStatItem('Following', stats['following']!, Icons.person_add)),
-          _buildDivider(),
-          Expanded(child: _buildStatItem('Created', stats['created']!, Icons.create)),
-          _buildDivider(),
-          Expanded(child: _buildStatItem('Collected', stats['collected']!, Icons.inventory)),
+          Expanded(child: _buildStatItem('Collected', stats['collected'] ?? '0', Icons.inventory)),
         ],
       ),
     );

@@ -172,9 +172,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> {
       await walletProvider.connectToWallet(context);
 
       walletProvider.addListener(() {
-
         print('🥦 ~ walletProvider.walletAddress: ${walletProvider.walletAddress}');
-
         if (walletProvider.walletAddress != null) {
             context.go(AppRoutes.home);
         }
